@@ -2,7 +2,7 @@ var APP_DATA = {
   "scenes": [
     {
       "id": "0-sts-philip--james-catholic-church-360-view-exterior-1",
-      "name": "Sts. Philip & James Catholic Church Meyersdale, PA",
+      "name": "Sts. Philip & James Catholic Church 360 View Exterior 1",
       "levels": [
         {
           "tileSize": 256,
@@ -50,7 +50,7 @@ var APP_DATA = {
     },
     {
       "id": "1-sts-philip--james-catholic-church-360-view-exterior-2",
-      "name": "Sts. Philip & James Catholic Church Meyersdale, PA",
+      "name": "Sts. Philip & James Catholic Church 360 View Exterior 2",
       "levels": [
         {
           "tileSize": 256,
@@ -98,7 +98,7 @@ var APP_DATA = {
     },
     {
       "id": "2-sts-philip--james-catholic-church-360-view-interior-1",
-      "name": "Sts. Philip & James Catholic Church Meyersdale, PA",
+      "name": "Sts. Philip & James Catholic Church 360 View Interior 1",
       "levels": [
         {
           "tileSize": 256,
@@ -152,7 +152,7 @@ var APP_DATA = {
     },
     {
       "id": "3-sts-philip--james-catholic-church-360-view-interior-2",
-      "name": "Sts. Philip & James Catholic Church Meyersdale, PA",
+      "name": "Sts. Philip & James Catholic Church 360 View Interior 2",
       "levels": [
         {
           "tileSize": 256,
@@ -200,7 +200,7 @@ var APP_DATA = {
     },
     {
       "id": "4-sts-philip--james-catholic-church-360-view-interior-3",
-      "name": "Sts. Philip & James Catholic Church Meyersdale, PA",
+      "name": "Sts. Philip & James Catholic Church 360 View Interior 3",
       "levels": [
         {
           "tileSize": 256,
@@ -248,7 +248,7 @@ var APP_DATA = {
     },
     {
       "id": "5-sts-philip--james-catholic-church-360-view-interior-4",
-      "name": "Sts. Philip & James Catholic Church Meyersdale, PA",
+      "name": "Sts. Philip & James Catholic Church 360 View Interior 4",
       "levels": [
         {
           "tileSize": 256,
@@ -302,7 +302,7 @@ var APP_DATA = {
     },
     {
       "id": "6-sts-philip--james-catholic-church-360-view-5",
-      "name": "Sts. Philip & James Catholic Church Meyersdale, PA",
+      "name": "Sts. Philip & James Catholic Church 360 View 5",
       "levels": [
         {
           "tileSize": 256,
