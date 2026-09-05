@@ -258,6 +258,56 @@
     }
   });
 
+  // SKY SURFER: hide navigation arrows and tour controls after viewer inactivity.
+  var ssNavIdleDelay = 3000;
+  var ssNavLastActivity = Date.now();
+  var ssNavIdleTimer = null;
+
+  function ssNavApplyIdleState(isIdle) {
+    if (!document.body) return;
+    if (isIdle) document.body.classList.add('ss-nav-hotspots-idle');
+    else document.body.classList.remove('ss-nav-hotspots-idle');
+  }
+
+  function ssNavIdleCheck() {
+    var elapsed = Date.now() - ssNavLastActivity;
+    var remaining = ssNavIdleDelay - elapsed;
+    if (remaining <= 0) {
+      ssNavApplyIdleState(true);
+      ssNavIdleTimer = null;
+      return;
+    }
+    ssNavIdleTimer = window.setTimeout(ssNavIdleCheck, remaining);
+  }
+
+  function ssNavMarkActivity() {
+    ssNavLastActivity = Date.now();
+    ssNavApplyIdleState(false);
+    if (!ssNavIdleTimer) {
+      ssNavIdleTimer = window.setTimeout(ssNavIdleCheck, ssNavIdleDelay);
+    }
+  }
+
+  var ssNavActivityEvents = [
+    'pointermove', 'pointerdown',
+    'mousemove', 'mousedown',
+    'touchstart', 'touchmove',
+    'wheel', 'click', 'keydown',
+    'gesturestart', 'gesturechange'
+  ];
+  for (var ssNavEventIndex = 0; ssNavEventIndex < ssNavActivityEvents.length; ssNavEventIndex++) {
+    document.addEventListener(ssNavActivityEvents[ssNavEventIndex], ssNavMarkActivity, {
+      capture: true,
+      passive: true
+    });
+  }
+  window.addEventListener('resize', ssNavMarkActivity, { passive: true });
+  window.addEventListener('orientationchange', ssNavMarkActivity, { passive: true });
+  window.addEventListener('focus', ssNavMarkActivity, { passive: true });
+
+  // Start visible, then hide only after the configured idle period.
+  ssNavMarkActivity();
+
   function createLinkHotspotElement(hotspot) {
 
     // Create wrapper element to hold icon and tooltip.
