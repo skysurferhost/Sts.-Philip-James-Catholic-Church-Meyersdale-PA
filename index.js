@@ -77,6 +77,151 @@
   // Initialize viewer.
   var viewer = new Marzipano.Viewer(panoElement, viewerOpts);
 
+  // SKY_SURFER_PHONE_TITLE_AUTO_HEIGHT_V1
+  var ssPhoneTitleMinimumHeight = null;
+  var ssPhoneTitleHeightRaf = 0;
+
+  function ssPhoneLandscapeActive() {
+    if (!document.body || !document.body.classList.contains('mobile')) return false;
+    var landscape = window.innerWidth > window.innerHeight;
+    var coarse = false;
+    try { coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches; } catch (ignore) {}
+    return landscape && (coarse || window.innerHeight <= 500);
+  }
+
+  function ssReadPhoneTitleMinimumHeight() {
+    if (ssPhoneTitleMinimumHeight !== null) return ssPhoneTitleMinimumHeight;
+    var value = 50;
+    try {
+      var styles = window.getComputedStyle(document.body);
+      var rawMin = parseFloat(styles.getPropertyValue('--ss-phone-title-min-height'));
+      var rawCurrent = parseFloat(styles.getPropertyValue('--ss-phone-title-height'));
+      if (isFinite(rawMin)) value = rawMin;
+      else if (isFinite(rawCurrent)) value = rawCurrent;
+    } catch (ignore) {}
+    value = Math.max(50, Math.min(100, value || 50));
+    ssPhoneTitleMinimumHeight = value;
+    document.body.style.setProperty('--ss-phone-title-min-height', value + 'px');
+    return value;
+  }
+
+  function ssNumericFontWeight(raw) {
+    var text = String(raw || '').toLowerCase();
+    if (text === 'normal') return 400;
+    if (text === 'bold') return 700;
+    var value = parseInt(text, 10);
+    return isFinite(value) ? Math.max(100, Math.min(900, value)) : 400;
+  }
+
+  function ssMeasurePhoneTitle(title) {
+    if (!title || !document.body) return 0;
+    var rect = title.getBoundingClientRect();
+    if (!(rect.width > 0)) return 0;
+    var cs = window.getComputedStyle(title);
+    var probe = document.createElement('div');
+    probe.setAttribute('aria-hidden', 'true');
+    probe.textContent = title.textContent || '';
+    probe.style.position = 'fixed';
+    probe.style.left = '-10000px';
+    probe.style.top = '0';
+    probe.style.visibility = 'hidden';
+    probe.style.pointerEvents = 'none';
+    probe.style.boxSizing = 'border-box';
+    probe.style.width = rect.width + 'px';
+    probe.style.height = 'auto';
+    probe.style.minHeight = '0';
+    probe.style.maxHeight = 'none';
+    probe.style.padding = cs.padding;
+    probe.style.margin = '0';
+    probe.style.fontFamily = cs.fontFamily;
+    probe.style.fontSize = cs.fontSize;
+    probe.style.fontWeight = cs.fontWeight;
+    probe.style.fontStyle = cs.fontStyle;
+    probe.style.letterSpacing = cs.letterSpacing;
+    probe.style.lineHeight = cs.lineHeight;
+    probe.style.whiteSpace = 'normal';
+    probe.style.wordBreak = 'keep-all';
+    probe.style.overflowWrap = 'anywhere';
+    probe.style.textAlign = 'center';
+    document.body.appendChild(probe);
+    var height = Math.ceil(probe.scrollHeight);
+    probe.remove();
+    return height;
+  }
+
+  function ssSyncPhoneTitleAutoHeight() {
+    ssPhoneTitleHeightRaf = 0;
+    var minHeight = ssReadPhoneTitleMinimumHeight();
+    if (!document.body) return;
+    if (!ssPhoneLandscapeActive()) {
+      document.body.style.setProperty('--ss-phone-title-height', minHeight + 'px');
+      return;
+    }
+
+    var title = document.querySelector('#titleBar .sceneName');
+    if (!title) {
+      document.body.style.setProperty('--ss-phone-title-height', minHeight + 'px');
+      return;
+    }
+
+    var cs = window.getComputedStyle(title);
+    var naturalHeight = ssMeasurePhoneTitle(title);
+    var lineHeight = parseFloat(cs.lineHeight);
+    if (!isFinite(lineHeight)) lineHeight = (parseFloat(cs.fontSize) || 16) * 1.35;
+    var padTop = parseFloat(cs.paddingTop) || 0;
+    var padBottom = parseFloat(cs.paddingBottom) || 0;
+    var oneLineHeight = Math.ceil(lineHeight + padTop + padBottom + 2);
+    var wrapped = naturalHeight > oneLineHeight + 2;
+
+    // Match Annunciation geometry: font weight by itself must never make a
+    // one-line header taller. A 700-weight existing project title therefore
+    // stays at the same 50px minimum as a 300-weight title when both fit on
+    // one line. Grow only when the rendered text truly wraps.
+    var desired = wrapped ? Math.max(minHeight, naturalHeight + 2) : minHeight;
+    desired = Math.max(minHeight, Math.min(100, Math.ceil(desired)));
+    document.body.style.setProperty('--ss-phone-title-height', desired + 'px');
+  }
+
+  function ssQueuePhoneTitleAutoHeight() {
+    if (ssPhoneTitleHeightRaf) cancelAnimationFrame(ssPhoneTitleHeightRaf);
+    ssPhoneTitleHeightRaf = requestAnimationFrame(ssSyncPhoneTitleAutoHeight);
+  }
+
+  window.addEventListener('resize', ssQueuePhoneTitleAutoHeight);
+  window.addEventListener('orientationchange', function() {
+    ssQueuePhoneTitleAutoHeight();
+    setTimeout(ssQueuePhoneTitleAutoHeight, 120);
+    setTimeout(ssQueuePhoneTitleAutoHeight, 360);
+  });
+  document.addEventListener('fullscreenchange', ssQueuePhoneTitleAutoHeight);
+  document.addEventListener('webkitfullscreenchange', ssQueuePhoneTitleAutoHeight);
+  if (window.visualViewport && window.visualViewport.addEventListener) {
+    window.visualViewport.addEventListener('resize', ssQueuePhoneTitleAutoHeight);
+  }
+
+  var ssPhoneTitleBarNode = document.getElementById('titleBar');
+  if (ssPhoneTitleBarNode && window.MutationObserver) {
+    new MutationObserver(ssQueuePhoneTitleAutoHeight).observe(ssPhoneTitleBarNode, {
+      subtree: true,
+      childList: true,
+      characterData: true
+    });
+  }
+  if (document.body && window.MutationObserver) {
+    new MutationObserver(ssQueuePhoneTitleAutoHeight).observe(document.body, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+  }
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(ssQueuePhoneTitleAutoHeight).catch(function(){});
+  }
+  ssQueuePhoneTitleAutoHeight();
+  setTimeout(ssQueuePhoneTitleAutoHeight, 80);
+  setTimeout(ssQueuePhoneTitleAutoHeight, 300);
+  setTimeout(ssQueuePhoneTitleAutoHeight, 800);
+
+
   // SKY_SURFER_LANDSCAPE_VIEWPORT_REFRESH_V1
   var ssViewportRefreshTimer = null;
   function ssRefreshPanoramaViewport() {
